@@ -43,10 +43,14 @@ class Client {
                                         serviceInstance[mtd](msg, (err, res) => {
                                             if (retry > 0) {
                                                 if (err) {
-                                                    retry--
-                                                    pino.error('reconnecting...', id, err)
-                                                    this.discovery.clean(id, host)
-                                                    callback(null)
+                                                    retry--;
+                                                    if(err.code >= 8 && err.code <= 15){
+                                                        pino.error('reconnecting...', id, err)
+                                                        this.discovery.clean(id, host)
+                                                        callback(null)
+                                                    }else{
+                                                        callback(err)
+                                                    }
                                                 } else {
                                                     resOk = true
                                                     callback(null, res)

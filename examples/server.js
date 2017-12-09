@@ -28,9 +28,18 @@ class Test {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 console.log('SayHello')
-                resolve({
-                    message: 'Hello ' + ctx.request.name + ' ' + Date.now() 
-                })
+                let date = Date.now()
+                if(date %2){ // testing errors from internal code and not connections
+                    reject(new Error('Test Error'))
+
+                    /*resolve({
+                        message: 'Hello ' + ctx.request.name + ' ' +  date
+                    })*/
+                }else{
+                    resolve({
+                        message: 'Hello ' + ctx.request.name + ' ' +  date
+                    })
+                }
             }, Math.floor((Math.random() * 100) + 1))
 
         })
