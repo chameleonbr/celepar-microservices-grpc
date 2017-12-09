@@ -20,51 +20,65 @@ class Discovery extends EventEmitter {
         this.listServers = {}
         this.listConnections = {}
         this.listInfo = {}
+        this.serverFound = false
         this.rsub = new Redis(this.options.redis)
     }
-    async start() {
-        let subs = []
-        let pipe = this.redis.pipeline()
-        for (let id of this.options.ids) {
-            subs.push('svc:up:' + id)
-            subs.push('svc:down:' + id)
-            subs.push('svc:pong:' + id)
-            pipe.publish('svc:ping:' + id,1)
-            this.listServers[id] = []
-            this.listConnections[id] = {}
-        }
+    start() {
+        let self = this
+        return new Promise((resolve, reject) => {
+            let subs = []
+            let pipe = this.redis.pipeline()
+            for (let id of this.options.ids) {
+                subs.push('svc:up:' + id)
+                subs.push('svc:down:' + id)
+                subs.push('svc:pong:' + id)
+                pipe.publish('svc:ping:' + id, 1)
+                this.listServers[id] = []
+                this.listConnections[id] = {}
+            }
 
-        this.rsub.subscribe(subs, async() => {
-            pipe.exec()
+            this.rsub.subscribe(subs, () => {
+                pino.info('ping sended')
+                pipe.exec()
+            })
+            this.rsub.on('message', (channel, message) => {
+                if (~channel.indexOf("svc:up:")) {
+                    let svc = channel.split(':')[2]
+                    let [host, port, timestamp, ttl, avg, queue, errors] = message.split(':')
+                    host = host + ':' + port
+                    this.setInfo(svc, host, {
+                        host,
+                        timestamp,
+                        ttl,
+                        avg,
+                        queue,
+                        errors
+                    })
+                    this.add(svc, host)
+                }
+                if (~channel.indexOf("svc:down:")) {
+                    let svc = channel.split(':')[2]
+                    let host = message
+                    this.del(svc, host)
+                }
+                if (~channel.indexOf("svc:pong:")) {
+                    let svc = channel.split(':')[2]
+                    let host = message
+                    pino.info('pong received', host)
+                    this.add(svc, host)
+                }
+            })
+
+            let ref = setInterval(() => {
+                pino.info('awaiting servers')
+                if (self.serverFound) {
+                    pino.info('server found, starting...')
+                    clearInterval(ref)
+                    self.started = true
+                    resolve(self)
+                }
+            }, 100)
         })
-        this.rsub.on('message', (channel, message) => {
-            if (~channel.indexOf("svc:up:")) {
-                let svc = channel.split(':')[2]
-                let [host, port, timestamp, ttl, avg, queue, errors] = message.split(':')
-                host = host + ':' + port
-                this.setInfo(svc, host, {
-                    host,
-                    timestamp,
-                    ttl,
-                    avg,
-                    queue,
-                    errors
-                })
-                this.add(svc, host)
-            }
-            if (~channel.indexOf("svc:down:")) {
-                let svc = channel.split(':')[2]
-                let host = message
-                this.del(svc, host)
-            }
-            if (~channel.indexOf("svc:pong:")) {
-                let svc = channel.split(':')[2]
-                let host = message
-                this.add(svc, host)
-            }
-        })
-        
-        return this
     }
     setInfo(svc, host, info) {
         if (this.listInfo[svc] === undefined) {
@@ -80,6 +94,7 @@ class Discovery extends EventEmitter {
         this.redis.publish('svc.down:' + svc, host)
     }
     add(id, host) {
+        this.serverFound = true
         if (this.listServers[id].indexOf(host) === -1) {
             pino.info("ADD SERVER", id, host)
             this.listServers[id].push(host)
