@@ -56,6 +56,6 @@ let inst = new Test()
 
 console.log(typeof inst)
 
-serv.use(inst)
+serv.use(obj)
 
 serv.start()
