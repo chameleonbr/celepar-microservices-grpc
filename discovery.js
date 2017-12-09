@@ -20,46 +20,23 @@ class Discovery extends EventEmitter {
         this.listServers = {}
         this.listConnections = {}
         this.listInfo = {}
-        /**
-         * KEYS[1] SERVICE ID
-         */
-        this.redis.defineCommand('getServers', {
-            numberOfKeys: 1,
-            lua: `
-            local hosts = redis.call('smembers','SVC:'..KEYS[1])
-            local validHosts = {}
-            local i = 1
-            for k, v in pairs(hosts) do
-                if redis.call('exists','HSI:'..v) == 1 then
-                    validHosts[i] = v
-                    i = i + 1
-                end
-            end
-            return validHosts
-            `
-        })
-
-
         this.rsub = new Redis(this.options.redis)
     }
     async start() {
         let subs = []
+        let pipe = this.redis.pipeline()
         for (let id of this.options.ids) {
             subs.push('svc:up:' + id)
             subs.push('svc:down:' + id)
-            this.listServers[id] = await this.redis.getServers(id)
+            subs.push('svc:pong:' + id)
+            pipe.publish('svc:ping:' + id,1)
+            this.listServers[id] = []
             this.listConnections[id] = {}
         }
 
-        /**
-         * KEYS[2] HOST:PORT
-         * KEYS[3] TIMESTAMP
-         * KEYS[4] TTL
-         * ARGV[1] AVG
-         * ARGV[2] REQ QUEUE
-         * ARGV[3] ERRORS
-         */
-        this.rsub.subscribe(subs, () => {})
+        this.rsub.subscribe(subs, async() => {
+            pipe.exec()
+        })
         this.rsub.on('message', (channel, message) => {
             if (~channel.indexOf("svc:up:")) {
                 let svc = channel.split(':')[2]
@@ -80,7 +57,13 @@ class Discovery extends EventEmitter {
                 let host = message
                 this.del(svc, host)
             }
+            if (~channel.indexOf("svc:pong:")) {
+                let svc = channel.split(':')[2]
+                let host = message
+                this.add(svc, host)
+            }
         })
+        
         return this
     }
     setInfo(svc, host, info) {
