@@ -1,6 +1,6 @@
 {
   "name": "celepar-microservices-grpc",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Basic lib to handle microservices with gRPC and Redis",
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,7 @@
   "dependencies": {
     "async": "^2.6.0",
     "fixedqueue": "0.0.1",
-    "grpc": "^1.7.2",
+    "grpc": "^1.7.3",
     "ioredis": "^3.2.2",
     "lodash": "^4.17.4",
     "pino": "^4.10.2",

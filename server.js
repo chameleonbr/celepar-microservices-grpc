@@ -35,6 +35,8 @@ class Server {
 
         this.methods = {}
         this.options = _.defaults(options, def)
+        this.options.credentials = this.options.credentials || grpc.ServerCredentials.createInsecure()
+
 
         this.options.name = this.options.package + ':' + this.options.service
         this.proto = grpc.load(this.options.proto)
@@ -93,7 +95,7 @@ class Server {
             let hostPort = host + ':' + port
             let bindHostPort = bindHost + ':' + port
             this.announcer.emit('bind', hostPort)
-            this.server.bind(bindHostPort, this.options.credentials || grpc.ServerCredentials.createInsecure())
+            this.server.bind(bindHostPort, this.options.credentials)
             this.server.start()
             this.announcer.emit('started')
         } catch (err) {
