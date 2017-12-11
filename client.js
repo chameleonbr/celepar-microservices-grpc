@@ -44,11 +44,12 @@ class Client {
                                             if (retry > 0) {
                                                 if (err) {
                                                     retry--;
-                                                    if(err.code >= 8 && err.code <= 15){
+                                                    pino.error('exception', err)
+                                                    if (err.code != 13 && err.code >= 8 && err.code <= 15) {
                                                         pino.error('reconnecting...', id, err)
                                                         this.discovery.clean(id, host)
                                                         callback(null)
-                                                    }else{
+                                                    } else {
                                                         callback(err)
                                                     }
                                                 } else {
@@ -83,8 +84,8 @@ class Client {
         this.discovery = this.options.discovery || new Discovery(this.options)
     }
 
-    async start() {
-        await this.discovery.start()
+    async start(daemon = false) {
+        await this.discovery.start(daemon)
         return this
     }
 

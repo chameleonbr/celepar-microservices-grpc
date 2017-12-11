@@ -23,7 +23,7 @@ class Discovery extends EventEmitter {
         this.serverFound = false
         this.rsub = new Redis(this.options.redis)
     }
-    start() {
+    start(daemon = false) {
         let self = this
         return new Promise((resolve, reject) => {
             let subs = []
@@ -71,13 +71,15 @@ class Discovery extends EventEmitter {
 
             let ref = setInterval(() => {
                 pino.info('awaiting servers')
-                if (self.serverFound) {
-                    pino.info('server found, starting...')
+                if (self.serverFound || daemon === true) {
+                    if(self.serverFound){
+                        pino.info('server found, starting...')
+                    }
                     clearInterval(ref)
                     self.started = true
                     resolve(self)
                 }
-            }, 100)
+            }, 1000)
         })
     }
     setInfo(svc, host, info) {

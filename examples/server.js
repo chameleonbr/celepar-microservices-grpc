@@ -9,13 +9,13 @@ const serv = new Server({
 })
 
 let obj = {
-    SayHello: async(ctx) => {
+    sayHello: async(ctx) => {
         console.log('SayHello')
         return {
             message: 'Hello ' + ctx.request.name + ' ' + Date.now() 
         }
     },
-    SayBye: async(ctx) => {
+    sayBye: async(ctx) => {
         console.log('SayBye')
         return {
             message: 'Hello ' + ctx.request.name + ' ' + Date.now() 
@@ -24,7 +24,7 @@ let obj = {
 }
 
 class Test {
-    SayHello(ctx) {
+    sayHello(ctx) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 console.log('SayHello')
@@ -44,7 +44,7 @@ class Test {
 
         })
     }
-    async SayBye(ctx) {
+    async sayBye(ctx) {
         //throw new Error('lalalala')
         console.log('SayBye')
         return {

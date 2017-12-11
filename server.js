@@ -37,32 +37,34 @@ class Server {
         this.options = _.defaults(options, def)
 
         this.options.name = this.options.package + ':' + this.options.service
+        this.proto = grpc.load(this.options.proto)
         this.announcer = this.options.announcer || new Announcer(this.options)
         pino.info('Creating new service')
     }
     use(obj) {
         let self = this
-        let methods = Object.getOwnPropertyNames(obj)
-        if (methods.length === 0) {
-            methods = Object.getOwnPropertyNames(Object.getPrototypeOf(obj)).slice(1)
-        }
+        let methods = Object.getOwnPropertyNames(this.proto[this.options.package][this.options.service]['service'])
         for (let mtd of methods) {
-            this.announcer.emit('service:register', mtd)
-            this.methods[mtd] = (ctx, callback) => {
-                let startAt = process.hrtime()
-                this.announcer.emit('service:start', mtd)
-                obj[mtd].bind(obj)(ctx).then((res) => {
-                    let diff = process.hrtime(startAt)
-                    let time = Math.round(diff[0] * 1e3 + diff[1] * 1e-6);
-                    this.announcer.emit('service:end', mtd, time)
-                    callback(null, res)
-                }).catch((err) => {
-                    let diff = process.hrtime(startAt)
-                    let time = Math.round(diff[0] * 1e3 + diff[1] * 1e-6);
-                    this.announcer.emit('service:end', mtd, time)
-                    this.announcer.emit('service:error', mtd, err)
-                    callback(err, null)
-                })
+            if (obj[mtd] !== undefined) {
+                this.announcer.emit('service:register', mtd)
+                this.methods[mtd] = (ctx, callback) => {
+                    let startAt = process.hrtime()
+                    this.announcer.emit('service:start', mtd)
+                    obj[mtd].bind(obj)(ctx).then((res) => {
+                        let diff = process.hrtime(startAt)
+                        let time = Math.round(diff[0] * 1e3 + diff[1] * 1e-6);
+                        this.announcer.emit('service:end', mtd, time)
+                        callback(null, res)
+                    }).catch((err) => {
+                        let diff = process.hrtime(startAt)
+                        let time = Math.round(diff[0] * 1e3 + diff[1] * 1e-6);
+                        this.announcer.emit('service:end', mtd, time)
+                        this.announcer.emit('service:error', mtd, err)
+                        callback(err, null)
+                    })
+                }
+            } else {
+                pino.info('method', mtd, 'not found')
             }
         }
         return this
@@ -76,15 +78,15 @@ class Server {
     async start() {
         this.announcer.emit('starting')
         this.server = new grpc.Server()
-        let proto = grpc.load(this.options.proto)
-        if (proto[this.options.package] === undefined) {
+
+        if (this.proto[this.options.package] === undefined) {
             throw new Error('package option not defined')
         }
-        if (proto[this.options.package][this.options.service] === undefined) {
+        if (this.proto[this.options.package][this.options.service] === undefined) {
             throw new Error('service option not defined')
         }
         try {
-            this.server.addService(proto[this.options.package][this.options.service]['service'], this.methods)
+            this.server.addService(this.proto[this.options.package][this.options.service]['service'], this.methods)
             let port = await portFinder.getPortPromise()
             let bindHost = this.options.bindHost || this.options.host || '0.0.0.0'
             let host = this.options.host || getInterfacesIP()[0]

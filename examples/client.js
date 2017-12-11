@@ -55,7 +55,7 @@ cli.start().then(async(client) => {
     let startAt = process.hrtime()
     for (let i = 0; i < 5000; i++) {
         try {
-            let res = await client.helloworld.Greeter.sayBye('avila')
+            let res = await cli.helloworld.Greeter.sayBye('avila')
             //console.log(res)
         } catch (e) {
             //console.log(e)
