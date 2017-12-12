@@ -5,6 +5,7 @@ const pino = require('pino')()
 const portFinder = require('portfinder')
 portFinder.basePort = 50051
 const os = require('os')
+grpc.setLogger(pino)
 
 const getInterfacesIP = () => {
     let addresses = []

@@ -4,6 +4,7 @@ const Discovery = require('./discovery')
 const crypto = require('crypto')
 const pino = require('pino')()
 const async = require('async')
+grpc.setLogger(pino)
 
 class Client {
     constructor(options) {
