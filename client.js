@@ -25,7 +25,9 @@ class Client {
             let id = crypto.createHash('md5').update(service.package + ':' + service.service).digest('hex')
             this.options.ids.push(id)
             let methods = Object.getOwnPropertyNames(svc.service)
-            this[service.package] = {}
+            if(this[service.package] === undefined){
+                this[service.package] = {}
+            }
             this[service.package][service.service] = {}
             for (let mtd of methods) {
                 this[service.package][service.service][mtd] = (msg) => {

@@ -6,7 +6,12 @@ let cli = new Client({
     services: [{
         package: 'helloworld',
         service: 'Greeter',
-    }],
+    },
+    {
+        package: 'helloworld',
+        service: 'Other',
+    }
+],
     proto: __dirname + '/hello.proto'
 })
 

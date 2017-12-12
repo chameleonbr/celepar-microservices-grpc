@@ -73,7 +73,7 @@ let cli = new Client({
         port: 6379,
         db: 10
     }
-})
+}).start()
 
 let test = async() => {
     try {
