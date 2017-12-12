@@ -81,7 +81,7 @@ class Announce extends EventEmitter {
         })
     }
     update() {
-        this.redis.publish('svc:up:' + this.id, this.hostPort + ':' + Date.now() + ':' + (this.options.update * this.options.multiplier) + ':' + this.avg + ':' + this.queue + ':' + this.errors)
+        this.redis.publish('svc:up:' + this.id, this.hostPort + '|' + Date.now() + '|' + (this.options.update * this.options.multiplier) + '|' + this.avg + '|' + this.queue + '|' + this.errors)
     }
 }
 

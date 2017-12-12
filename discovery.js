@@ -44,8 +44,7 @@ class Discovery extends EventEmitter {
             this.rsub.on('message', (channel, message) => {
                 if (~channel.indexOf("svc:up:")) {
                     let svc = channel.split(':')[2]
-                    let [host, port, timestamp, ttl, avg, queue, errors] = message.split(':')
-                    host = host + ':' + port
+                    let [host, timestamp, ttl, avg, queue, errors] = message.split('|')
                     this.setInfo(svc, host, {
                         host,
                         timestamp,
