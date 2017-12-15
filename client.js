@@ -42,6 +42,9 @@ class Client {
                             (callback) => {
                                 try {
                                     let [host, serviceInstance] = this.getClient(svc, id)
+                                    if(this.options.host !== null){
+                                        host = this.options.host
+                                    }
                                     if (serviceInstance) {
                                         serviceInstance[mtd](msg, (err, res) => {
                                             if (retry > 0) {
