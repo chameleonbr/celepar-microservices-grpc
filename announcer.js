@@ -29,6 +29,7 @@ class Announce extends EventEmitter {
         }
         this.id = crypto.createHash('md5').update(this.options.name).digest('hex')
         this.hostPort = ''
+        this.qty = 0
         this.avg = 0
         this.queue = 0
         this.errors = 0
@@ -46,7 +47,7 @@ class Announce extends EventEmitter {
             this.rsub.subscribe('svc:ping:' + this.id)
             this.rsub.on('message', (channel, message) => {
                 pino.info('ping received')
-                this.redis.publish('svc:pong:' + this.id, hostPort)
+                this.update()
             })
         })
         this.on('started', () => {
@@ -65,7 +66,8 @@ class Announce extends EventEmitter {
             this.queue++
         })
         this.on('service:end', (method, time) => {
-            this.queue--
+            this.qty++
+                this.queue--
                 this.it++
                 this.queueReq.push(time)
 
@@ -81,7 +83,8 @@ class Announce extends EventEmitter {
         })
     }
     update() {
-        this.redis.publish('svc:up:' + this.id, this.hostPort + '|' + Date.now() + '|' + (this.options.update * this.options.multiplier) + '|' + this.avg + '|' + this.queue + '|' + this.errors)
+        this.redis.publish('svc:up:' + this.id, this.hostPort + '|' + Date.now() + '|' + (this.options.update * this.options.multiplier) + '|' + this.qty + '|' + this.avg + '|' + this.queue + '|' + this.errors)
+        this.qty = this.errors = 0
     }
 }
 

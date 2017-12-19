@@ -31,7 +31,6 @@ class Discovery extends EventEmitter {
             for (let id of this.options.ids) {
                 subs.push('svc:up:' + id)
                 subs.push('svc:down:' + id)
-                subs.push('svc:pong:' + id)
                 pipe.publish('svc:ping:' + id, 1)
                 this.listServers[id] = []
                 this.listConnections[id] = {}
@@ -44,11 +43,12 @@ class Discovery extends EventEmitter {
             this.rsub.on('message', (channel, message) => {
                 if (~channel.indexOf("svc:up:")) {
                     let svc = channel.split(':')[2]
-                    let [host, timestamp, ttl, avg, queue, errors] = message.split('|')
+                    let [host, timestamp, ttl, qty, avg, queue, errors] = message.split('|')
                     this.setInfo(svc, host, {
                         host,
                         timestamp,
                         ttl,
+                        qty,
                         avg,
                         queue,
                         errors
@@ -60,18 +60,12 @@ class Discovery extends EventEmitter {
                     let host = message
                     this.del(svc, host)
                 }
-                if (~channel.indexOf("svc:pong:")) {
-                    let svc = channel.split(':')[2]
-                    let host = message
-                    pino.info('pong received', host)
-                    this.add(svc, host)
-                }
             })
 
             let ref = setInterval(() => {
                 pino.info('awaiting servers')
                 if (self.serverFound || daemon === true) {
-                    if(self.serverFound){
+                    if (self.serverFound) {
                         pino.info('server found, starting...')
                     }
                     clearInterval(ref)
@@ -118,9 +112,13 @@ class Discovery extends EventEmitter {
             delete this.listConnections[id][host]
         }
     }
-    getClient(svc, id) {
+    getClient(svc, id, forceHost = false) {
         if (this.listServers[id] !== undefined && this.listServers[id].length > 0) {
-            let host = rr(this.listServers[id])
+            if (!!forceHost) {
+                let host = forceHost
+            } else {
+                let host = rr(this.listServers[id])
+            }
             try {
                 if (this.listConnections[id][host] === undefined) {
                     this.listConnections[id][host] = new svc(host, (this.options.credentials || grpc.credentials.createInsecure()))
