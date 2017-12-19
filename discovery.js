@@ -114,10 +114,11 @@ class Discovery extends EventEmitter {
     }
     getClient(svc, id, forceHost = false) {
         if (this.listServers[id] !== undefined && this.listServers[id].length > 0) {
+            let host
             if (!!forceHost) {
-                let host = forceHost
+                host = forceHost
             } else {
-                let host = rr(this.listServers[id])
+                host = rr(this.listServers[id])
             }
             try {
                 if (this.listConnections[id][host] === undefined) {

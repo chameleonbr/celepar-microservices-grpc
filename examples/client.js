@@ -44,7 +44,6 @@ let exec3 = () => {
         exec2()
     }
 }
-/*
 
 cli.start().then(() => {
     setInterval(async() => {
@@ -52,21 +51,20 @@ cli.start().then(() => {
         console.log(res)
     }, 1000)
 })
-*/
 
-
+/*
 
 cli.start().then(async(client) => {
     let startAt = process.hrtime()
     for (let i = 0; i < 5000; i++) {
         try {
             let res = await cli.helloworld.Greeter.sayBye('avila')
-            //console.log(res)
+            console.log(res)
         } catch (e) {
-            //console.log(e)
+            console.log(e)
         }
     }
     let diff = process.hrtime(startAt)
     let time = Math.round(diff[0] * 1e3 + diff[1] * 1e-6);
     console.log(time)
-})
+})*/

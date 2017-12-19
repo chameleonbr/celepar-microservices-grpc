@@ -92,9 +92,9 @@ class Client {
         return this
     }
 
-    getClient(svc, id) {
+    getClient(svc, id, host) {
         try {
-            return this.discovery.getClient(svc, id)
+            return this.discovery.getClient(svc, id, host)
         } catch (e) {
             throw e
         }
