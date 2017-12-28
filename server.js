@@ -65,8 +65,6 @@ class Server {
                         callback(err, null)
                     })
                 }
-            } else {
-                pino.info('method', mtd, 'not found')
             }
         }
         return this
