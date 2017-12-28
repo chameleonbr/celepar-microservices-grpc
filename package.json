@@ -1,6 +1,6 @@
 {
   "name": "celepar-microservices-grpc",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Basic lib to handle microservices with gRPC and Redis",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,8 @@
   "keywords": [
     "grpc",
     "nodejs",
-    "redis"
+    "redis",
+    "microservices"
   ],
   "author": "Andre Avila",
   "license": "MIT",
@@ -28,7 +29,6 @@
     "ioredis": "^3.2.2",
     "lodash": "^4.17.4",
     "pino": "^4.10.2",
-    "portfinder": "^1.0.13",
     "rr": "^0.1.0"
   }
 }

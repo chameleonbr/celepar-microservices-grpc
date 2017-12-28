@@ -66,10 +66,10 @@ class Announce extends EventEmitter {
             this.queue++
         })
         this.on('service:end', (method, time) => {
-            this.qty++
-                this.queue--
-                this.it++
-                this.queueReq.push(time)
+            this.qty++;
+            this.queue--;
+            this.it++;
+            this.queueReq.push(time)
 
             if (this.it === this.options.freq) {
                 this.it = 0

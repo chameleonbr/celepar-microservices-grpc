@@ -2,8 +2,7 @@ const grpc = require('grpc')
 const _ = require('lodash')
 const Announcer = require('./announcer')
 const pino = require('pino')()
-const portFinder = require('portfinder')
-portFinder.basePort = 50051
+const rPort = require('./random_port')
 const os = require('os')
 grpc.setLogger(pino)
 
@@ -90,7 +89,7 @@ class Server {
         }
         try {
             this.server.addService(this.proto[this.options.package][this.options.service]['service'], this.methods)
-            let port = await portFinder.getPortPromise()
+            let port = await rPort()
             let bindHost = this.options.bindHost || this.options.host || '0.0.0.0'
             let host = this.options.host || getInterfacesIP()[0]
             let hostPort = host + ':' + port

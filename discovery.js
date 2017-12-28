@@ -14,6 +14,7 @@ class Discovery extends EventEmitter {
                 port: 6379,
                 db: 10
             },
+            error_limit: 0.15
         }
         this.options = _.defaults(options, def)
         this.redis = new Redis(this.options.redis)
@@ -53,7 +54,7 @@ class Discovery extends EventEmitter {
                         queue,
                         errors
                     })
-                    this.add(svc, host)
+
                 }
                 if (~channel.indexOf("svc:down:")) {
                     let svc = channel.split(':')[2]
@@ -83,6 +84,17 @@ class Discovery extends EventEmitter {
             this.listInfo[svc][host] = {}
         }
         this.listInfo[svc][host] = info
+
+        if (this.listInfo[svc][host]['errors'] > 0) {
+            if ((this.listInfo[svc][host]['qty'] * this.options.error_limit) > this.listInfo[svc][host]['errors']) {
+                this.add(svc, host)
+            } else {
+                this.del(svc, host)
+            }
+        } else {
+            this.add(svc, host)
+        }
+
     }
     clean(svc, host) {
         this.del(svc, host)

@@ -14,12 +14,14 @@ class Client {
             ids: [],
             host: null,
             credentials: null,
-            retries: 3
+            retries: 3,
+            error_limit: 0.15,
         }
         this.methods = {}
         this.pool = {}
         this.options = _.defaults(options, def)
         let proto = grpc.load(this.options.proto)
+        this.discovery = this.options.discovery || new Discovery(this.options)
 
         for (let service of this.options.services) {
             let svc = proto[service.package][service.service]
@@ -84,7 +86,7 @@ class Client {
                 }
             }
         }
-        this.discovery = this.options.discovery || new Discovery(this.options)
+        
     }
 
     async start(daemon = false) {
