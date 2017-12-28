@@ -7,10 +7,10 @@ const RandomPort = (opt) => {
             from: 50051,
             range: 100
         }
-        if (options === undefined) {
-            options = {}
+        if (opt === undefined) {
+            opt = {}
         }
-        options = Object.assign({}, def, options)
+        let options = Object.assign({}, def, opt)
 
         let port = options.from + ~~(Math.random() * options.range)
         const server = net.createServer()
