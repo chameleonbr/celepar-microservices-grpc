@@ -1,16 +1,17 @@
 var net = require('net')
 
-const RandomPort = (options) => {
+const RandomPort = (opt) => {
     return new Promise((resolve, reject) => {
 
+        let def = {
+            from: 50051,
+            range: 100
+        }
         if (options === undefined) {
             options = {}
         }
+        options = Object.assign({}, def, options)
 
-        Object.assign(options, {
-            from: 50051,
-            range: 100
-        })
         let port = options.from + ~~(Math.random() * options.range)
         const server = net.createServer()
         server.listen(port, function (err) {
