@@ -105,7 +105,7 @@ class Announce extends EventEmitter {
     update() {
         let svcInfo = ''
         for(let mtd in this.mtd){
-            svcInfo += `|${mtd}!${this.mtd[mtd]['qtd']}!${this.mtd[mtd]['avg']}!${this.mtd[mtd]['queue']}!${this.mtd[mtd]['errors']}`
+            svcInfo += `|${mtd}!${this.mtd[mtd]['qty']}!${this.mtd[mtd]['avg']}!${this.mtd[mtd]['queue']}!${this.mtd[mtd]['errors']}`
             this.mtd[mtd]['qty'] = 0
             this.mtd[mtd]['errors'] = 0
         }
