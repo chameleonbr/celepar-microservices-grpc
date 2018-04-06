@@ -150,6 +150,7 @@ class Discovery extends EventEmitter {
         }
     }
     selectHost(svc, id, mtd, forceHost = false, retries = 0) {
+        let host
         if (!!forceHost) {
             host = forceHost
         } else {
