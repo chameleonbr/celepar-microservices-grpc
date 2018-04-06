@@ -33,6 +33,7 @@ class Announce extends EventEmitter {
         this.avg = 0
         this.queue = 0
         this.errors = 0
+        this.mtd = {}
         this.queueReq = new FixedQueue(this.options.count)
         this.it = 0
         this.redis = new Redis(this.options.redis)
@@ -61,16 +62,34 @@ class Announce extends EventEmitter {
         })
         this.on('service:register', (method) => {
             pino.info('Registering method', method)
+            this.mtd[method] = {}
+            this.mtd[method].qty = 0
+            this.mtd[method].queue = 0
+            this.mtd[method].errors = 0
+            this.mtd[method].it = 0
+            this.mtd[method].avg = 0
+            this.mtd[method].queueReq = new FixedQueue(this.options.count)
         })
         this.on('service:start', (method) => {
             this.queue++
+            this.mtd[method].queue++
         })
         this.on('service:end', (method, time) => {
+            this.mtd[method].qty++
+            this.mtd[method].queue--
+            this.mtd[method].it++
+            this.mtd[method].queueReq.push(time)
+            if (this.mtd[method].it === this.options.freq) {
+                this.mtd[method].it = 0
+                this.mtd[method].avg = Math.round(this.mtd[method].queueReq.reduce(function (tot, cur) {
+                    return tot + cur
+                }, 0) / this.mtd[method].queueReq.length)
+            }
+
             this.qty++;
             this.queue--;
             this.it++;
             this.queueReq.push(time)
-
             if (this.it === this.options.freq) {
                 this.it = 0
                 this.avg = Math.round(this.queueReq.reduce(function (tot, cur) {
@@ -79,12 +98,20 @@ class Announce extends EventEmitter {
             }
         })
         this.on('service:error', (method) => {
+            this.mtd[method].errors++
             this.errors++
         })
     }
     update() {
-        this.redis.publish('svc:up:' + this.id, this.hostPort + '|' + Date.now() + '|' + (this.options.update * this.options.multiplier) + '|' + this.qty + '|' + this.avg + '|' + this.queue + '|' + this.errors)
-        this.qty = this.errors = 0
+        let svcInfo = ''
+        for(let mtd in this.mtd){
+            svcInfo += `|${mtd}!${this.mtd[mtd]['qtd']}!${this.mtd[mtd]['avg']}!${this.mtd[mtd]['queue']}!${this.mtd[mtd]['errors']}`
+            this.mtd[mtd]['qty'] = 0
+            this.mtd[mtd]['errors'] = 0
+        }
+        this.redis.publish(`svc:up:${this.id}`,`${this.hostPort}|${Date.now()}|${(this.options.update * this.options.multiplier)}|${this.qty}|${this.avg}|${this.queue}|${this.errors}${svcInfo}`)
+        this.qty = 0
+        this.errors = 0
     }
 }
 

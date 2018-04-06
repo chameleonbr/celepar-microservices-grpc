@@ -1,6 +1,7 @@
 const {
     Server
 } = require('../index')
+const UserError = require('../index').UserError
 
 const serv = new Server({
     package: 'helloworld',
@@ -53,8 +54,6 @@ class Test {
     }
 }
 let inst = new Test()
-
-console.log(typeof inst)
 
 serv.use(obj)
 

@@ -45,7 +45,7 @@ let exec3 = () => {
     }
 }
 
-cli.start().then(() => {
+cli.start(true).then(() => {
     setInterval(async() => {
         let res = await cli.helloworld.Greeter.sayHello('avila')
         console.log(res)

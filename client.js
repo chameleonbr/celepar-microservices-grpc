@@ -43,7 +43,7 @@ class Client {
                             },
                             (callback) => {
                                 try {
-                                    let [host, serviceInstance] = this.getClient(svc, id, this.options.host)
+                                    let [host, serviceInstance] = this.getClient(svc, id, mtd, this.options.host)
                                     if (serviceInstance) {
                                         serviceInstance[mtd](msg, (err, res) => {
                                             if (retry > 0) {
@@ -94,9 +94,9 @@ class Client {
         return this
     }
 
-    getClient(svc, id, host) {
+    getClient(svc, id, mtd, host) {
         try {
-            return this.discovery.getClient(svc, id, host)
+            return this.discovery.getClient(svc, id, mtd, host)
         } catch (e) {
             throw e
         }

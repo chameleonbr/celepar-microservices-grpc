@@ -3,6 +3,7 @@ const _ = require('lodash')
 const Announcer = require('./announcer')
 const pino = require('pino')()
 const rPort = require('./random_port')
+const UserError = require('./user_error')
 const os = require('os')
 grpc.setLogger(pino)
 
@@ -61,7 +62,9 @@ class Server {
                         let diff = process.hrtime(startAt)
                         let time = Math.round(diff[0] * 1e3 + diff[1] * 1e-6);
                         this.announcer.emit('service:end', mtd, time)
-                        this.announcer.emit('service:error', mtd, err)
+                        if(!(err instanceof UserError)){
+                            this.announcer.emit('service:error', mtd, err)
+                        }
                         callback(err, null)
                     })
                 }
