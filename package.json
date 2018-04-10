@@ -1,6 +1,6 @@
 {
   "name": "celepar-microservices-grpc",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Basic lib to handle microservices with gRPC and Redis",
   "main": "index.js",
   "scripts": {

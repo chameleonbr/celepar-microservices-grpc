@@ -43,7 +43,7 @@ class Discovery extends EventEmitter {
             })
             this.rsub.on('message', (channel, message) => {
                 if (~channel.indexOf("svc:up:")) {
-                    let svc = channel.split(':')[2]
+                    let id = channel.split(':')[2]
                     let [host, timestamp, ttl, qty, avg, queue, errors, ...mtds] = message.split('|')
 
                     let methods = {}
@@ -58,7 +58,7 @@ class Discovery extends EventEmitter {
 
                     }
 
-                    this.setInfo(svc, host, {
+                    this.setInfo(id, host, {
                         host,
                         timestamp,
                         ttl,
@@ -71,9 +71,9 @@ class Discovery extends EventEmitter {
 
                 }
                 if (~channel.indexOf("svc:down:")) {
-                    let svc = channel.split(':')[2]
+                    let id = channel.split(':')[2]
                     let host = message
-                    this.del(svc, host)
+                    this.del(id, host)
                 }
             })
 
@@ -90,20 +90,20 @@ class Discovery extends EventEmitter {
             }, 1000)
         })
     }
-    setInfo(svc, host, info) {
-        if (this.listInfo[svc] === undefined) {
-            this.listInfo[svc] = {}
+    setInfo(id, host, info) {
+        if (this.listInfo[id] === undefined) {
+            this.listInfo[id] = {}
         }
-        if (this.listInfo[svc][host] === undefined) {
-            this.listInfo[svc][host] = {}
+        if (this.listInfo[id][host] === undefined) {
+            this.listInfo[id][host] = {}
         }
-        this.listInfo[svc][host] = info
+        this.listInfo[id][host] = info
 
-        this.add(svc, host)
+        this.add(id, host)
     }
-    clean(svc, host) {
-        this.del(svc, host)
-        this.redis.publish('svc.down:' + svc, host)
+    clean(id, host) {
+        this.del(id, host)
+        this.redis.publish('svc.down:' + id, host)
     }
     add(id, host) {
         this.serverFound = true
@@ -131,7 +131,7 @@ class Discovery extends EventEmitter {
     }
     getClient(svc, id, mtd, forceHost) {
         if (this.listServers[id] !== undefined && this.listServers[id].length > 0) {
-            let host = this.selectHost(svc, id, mtd, forceHost)
+            let host = this.selectHost(id, mtd, forceHost)
             try {
                 if (this.listConnections[id][host] === undefined) {
                     this.listConnections[id][host] = new svc(host, (this.options.credentials || grpc.credentials.createInsecure()))
@@ -149,17 +149,17 @@ class Discovery extends EventEmitter {
             throw new Error('No available service found')
         }
     }
-    selectHost(svc, id, mtd, forceHost = false, retries = 0) {
+    selectHost(id, mtd, forceHost = false, retries = 0) {
         let host
         if (!!forceHost) {
             host = forceHost
         } else {
             host = rr(this.listServers[id])
         }
-        if (this.listServers[id].length > 1 && this.listInfo[svc][host]['methods'][mtd]['errors'] > 0 && retries < 5) {
-            if ( this.listInfo[svc][host]['methods'][mtd]['errors'] > (this.listInfo[svc][host]['methods'][mtd]['qty'] * this.options.error_limit)) {
+        if (this.listServers[id].length > 1 && this.listInfo[id][host]['methods'][mtd]['errors'] > 0 && retries < 5) {
+            if ( this.listInfo[id][host]['methods'][mtd]['errors'] > (this.listInfo[id][host]['methods'][mtd]['qty'] * this.options.error_limit)) {
                 retries++
-                host = this.selectHost(svc, id, mtd, forceHost, retries)
+                host = this.selectHost(id, mtd, forceHost, retries)
             }
         }
         return host
