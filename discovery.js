@@ -156,8 +156,8 @@ class Discovery extends EventEmitter {
         } else {
             host = rr(this.listServers[id])
         }
-        if (this.listServers[id].length > 1 && listInfo[svc][host]['methods'][mtd]['errors'] > 0 && retries < 5) {
-            if ( listInfo[svc][host]['methods'][mtd]['errors'] > (this.listInfo[svc][host]['methods'][mtd]['qty'] * this.options.error_limit)) {
+        if (this.listServers[id].length > 1 && this.listInfo[svc][host]['methods'][mtd]['errors'] > 0 && retries < 5) {
+            if ( this.listInfo[svc][host]['methods'][mtd]['errors'] > (this.listInfo[svc][host]['methods'][mtd]['qty'] * this.options.error_limit)) {
                 retries++
                 host = this.selectHost(svc, id, mtd, forceHost, retries)
             }
