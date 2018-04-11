@@ -156,11 +156,22 @@ class Discovery extends EventEmitter {
         } else {
             host = rr(this.listServers[id])
         }
-        if (this.listServers[id].length > 1 && this.listInfo[id][host]['methods'][mtd]['errors'] > 0 && retries < 5) {
-            if ( this.listInfo[id][host]['methods'][mtd]['errors'] > (this.listInfo[id][host]['methods'][mtd]['qty'] * this.options.error_limit)) {
-                retries++
-                host = this.selectHost(id, mtd, forceHost, retries)
+        try {
+            if (this.listServers[id].length > 1 &&
+                this.listInfo[id][host] !== undefined &&
+                this.listInfo[id][host]['methods'] !== undefined &&
+                this.listInfo[id][host]['methods'][mtd] !== undefined &&
+                this.listInfo[id][host]['methods'][mtd]['errors'] > 0 &&
+                retries < 5) {
+                if (this.listInfo[id][host]['methods'][mtd]['errors'] > (this.listInfo[id][host]['methods'][mtd]['qty'] * this.options.error_limit)) {
+                    retries++
+                    this.del(id, host)
+                    host = this.selectHost(id, mtd, forceHost, retries)
+                }
             }
+        } catch (e) {
+            this.del(id, host)
+            host = this.selectHost(id, mtd, forceHost, retries)
         }
         return host
     }
