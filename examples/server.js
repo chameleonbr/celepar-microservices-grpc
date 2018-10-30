@@ -1,3 +1,8 @@
+delete process.env['HTTP_PROXY']
+delete process.env['http_proxy']
+delete process.env['HTTPS_PROXY']
+delete process.env['https_proxy']
+
 const {
     Server
 } = require('../index')
@@ -10,18 +15,23 @@ const serv = new Server({
 })
 
 let obj = {
-    sayHello: async(ctx) => {
-        console.log('SayHello')
-        return {
-            message: 'Hello ' + ctx.request.name + ' ' + Date.now() 
+    sayHello: async (ctx) => {
+            console.log('SayHello')
+            return {
+                message: 'Hello ' + ctx.request.name + ' ' + Date.now()
+            }
+        },
+        sayBye: (ctx) => {
+            return new Promise((resolve, reject) => {
+                console.log('SayByeStart')
+                setTimeout(() => {
+                    console.log('SayByeEnd')
+                    resolve({
+                        message: 'Hello ' + ctx.request.name + ' ' + Date.now()
+                    })
+                },600000)
+            })
         }
-    },
-    sayBye: async(ctx) => {
-        console.log('SayBye')
-        return {
-            message: 'Hello ' + ctx.request.name + ' ' + Date.now() 
-        }
-    }
 }
 
 class Test {
@@ -30,15 +40,15 @@ class Test {
             setTimeout(() => {
                 console.log('SayHello')
                 let date = Date.now()
-                if(date %2){ // testing errors from internal code and not connections
+                if (date % 2) { // testing errors from internal code and not connections
                     reject(new Error('Test Error'))
 
                     /*resolve({
                         message: 'Hello ' + ctx.request.name + ' ' +  date
                     })*/
-                }else{
+                } else {
                     resolve({
-                        message: 'Hello ' + ctx.request.name + ' ' +  date
+                        message: 'Hello ' + ctx.request.name + ' ' + date
                     })
                 }
             }, Math.floor((Math.random() * 100) + 1))
@@ -49,11 +59,11 @@ class Test {
         //throw new Error('lalalala')
         console.log('SayBye')
         return {
-            message: 'Hello ' + ctx.request.name + ' ' + Date.now() 
+            message: 'Hello ' + ctx.request.name + ' ' + Date.now()
         }
     }
 }
-let inst = new Test()
+//let inst = new Test()
 
 serv.use(obj)
 

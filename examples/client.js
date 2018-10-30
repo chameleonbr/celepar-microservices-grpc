@@ -1,34 +1,44 @@
+delete process.env['HTTP_PROXY']
+delete process.env['http_proxy']
+delete process.env['HTTPS_PROXY']
+delete process.env['https_proxy']
+
 const {
     Client
 } = require('../index')
 
 let cli = new Client({
     services: [{
-        package: 'helloworld',
-        service: 'Greeter',
-    },
-    {
-        package: 'helloworld',
-        service: 'Other',
-    }
-],
+            package: 'helloworld',
+            service: 'Greeter',
+        },
+        {
+            package: 'helloworld',
+            service: 'Other',
+        }
+    ],
     proto: __dirname + '/hello.proto'
 })
 
 
-
-
-let exec = async() => {
-    try {
-        let res = await cli.sayHello({
-            name: 'Avila'
-        })
-        console.log(res)
-    } catch (err) {
-        console.log('errou', err)
+cli.start().then(async (client) => {
+    let exec = async () => {
+        try {
+            let res1 = await cli.helloworld.Greeter.sayHello('avila')
+            console.log(res1)
+            cli.options.callOptions = {
+                deadline: new Date().setSeconds(new Date().getSeconds() + 10)
+            }
+            let res = await cli.helloworld.Greeter.sayBye('avila')
+            console.log(res)
+        } catch (err) {
+            console.log('errou', err)
+        }
     }
-}
+    exec()
+})
 
+/*
 let exec2 = async() => {
     try {
         let res = await cli.helloworld.Greeter.sayHello({
@@ -51,7 +61,7 @@ cli.start(true).then(() => {
         console.log(res)
     }, 1000)
 })
-
+*/
 /*
 
 cli.start().then(async(client) => {
