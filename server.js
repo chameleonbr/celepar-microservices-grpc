@@ -1,16 +1,11 @@
 const grpc = require('grpc')
 const _ = require('lodash')
 const Announcer = require('./announcer')
-const protoLoader = require('@grpc/proto-loader')
 const pino = require('pino')()
 const rPort = require('./random_port')
 const UserError = require('./user_error')
 const os = require('os')
 grpc.setLogger(pino)
-
-const uncapitalizeFirstLetter = (string) => {
-    return string.charAt(0).toLowerCase() + string.slice(1);
-}
 
 const getInterfacesIP = () => {
     let addresses = []
@@ -36,14 +31,7 @@ class Server {
             host: null,
             bindHost: null,
             credentials: null,
-            announcer: null,
-            loader: {
-                keepCase: true,
-                longs: String,
-                enums: String,
-                defaults: true,
-                oneofs: true
-            }
+            announcer: null
         }
 
         this.methods = {}
@@ -52,21 +40,20 @@ class Server {
 
 
         this.options.name = this.options.package + ':' + this.options.service
-        //this.proto = grpc.load(this.options.proto)
-        this.proto = protoLoader.loadSync(this.options.proto, options.loader)
+        this.proto = grpc.load(this.options.proto)
         this.announcer = this.options.announcer || new Announcer(this.options)
         pino.info('Creating new service')
     }
     use(obj) {
         let self = this
-        let methods = Object.getOwnPropertyNames(this.proto[this.options.package + '.' + this.options.service])
+        let methods = Object.getOwnPropertyNames(this.proto[this.options.package][this.options.service]['service'])
         for (let mtd of methods) {
-            if (obj[uncapitalizeFirstLetter(mtd)] !== undefined) {
+            if (obj[mtd] !== undefined) {
                 this.announcer.emit('service:register', mtd)
                 this.methods[mtd] = (ctx, callback) => {
                     let startAt = process.hrtime()
                     this.announcer.emit('service:start', mtd)
-                    obj[uncapitalizeFirstLetter(mtd)].bind(obj)(ctx).then((res) => {
+                    obj[mtd].bind(obj)(ctx).then((res) => {
                         let diff = process.hrtime(startAt)
                         let time = Math.round(diff[0] * 1e3 + diff[1] * 1e-6);
                         this.announcer.emit('service:end', mtd, time)
@@ -86,21 +73,23 @@ class Server {
         return this
     }
     addMethod(mtd, func) {
-        let obj = {
-        }
-        obj[mtd] = func
-        this.use(obj)
+        this.use({
+            mtd: func
+        })
         return this
     }
     async start() {
         this.announcer.emit('starting')
         this.server = new grpc.Server()
 
-        if (this.proto[this.options.package + '.' + this.options.service] === undefined) {
-            throw new Error('package or service option not defined')
+        if (this.proto[this.options.package] === undefined) {
+            throw new Error('package option not defined')
+        }
+        if (this.proto[this.options.package][this.options.service] === undefined) {
+            throw new Error('service option not defined')
         }
         try {
-            this.server.addService(this.proto[this.options.package + '.' + this.options.service], this.methods)
+            this.server.addService(this.proto[this.options.package][this.options.service]['service'], this.methods)
             let port = await rPort()
             let bindHost = this.options.bindHost || this.options.host || '0.0.0.0'
             let host = this.options.host || getInterfacesIP()[0]
