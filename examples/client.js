@@ -24,8 +24,12 @@ let cli = new Client({
 cli.start().then(async (client) => {
     let exec = async () => {
         try {
-            let res1 = await cli.helloworld.Greeter.sayHello('avila')
-            console.log(res1)
+
+            for (let i = 0; i < 210; i++) {
+                let res1 = await cli.helloworld.Greeter.sayHello('avila')
+                console.log(res1)
+            }
+            
             cli.options.callOptions = {
                 deadline: new Date().setSeconds(new Date().getSeconds() + 10)
             }
