@@ -15,13 +15,12 @@ class Discovery extends EventEmitter {
                 db: 10
             },
             error_limit: 0.15,
-            limit: 100,
+            keepalive: true,
         }
         this.options = _.defaults(options, def)
         this.redis = new Redis(this.options.redis)
         this.listServers = {}
         this.listConnections = {}
-        this.cnCount = {}
         this.listInfo = {}
         this.serverFound = false
         this.rsub = new Redis(this.options.redis)
@@ -135,8 +134,7 @@ class Discovery extends EventEmitter {
         if (this.listServers[id] !== undefined && this.listServers[id].length > 0) {
             let host = this.selectHost(id, mtd, forceHost)
             try {
-                if(this.cnCount[host] !== undefined && this.cnCount[host] >= this.options.limit){
-                    this.cnCount[host] = 0
+                if(this.options.keepalive === false && this.listConnections[id][host] !== undefined){
                     this.listConnections[id][host].close()
                     delete this.listConnections[id][host]
                 }
@@ -147,13 +145,7 @@ class Discovery extends EventEmitter {
                 if (!this.listConnections[id][host]) {
                     throw new Error('No available service found')
                 }
-
-                if(this.cnCount[host] == undefined){
-                    this.cnCount[host] = 1
-                }else{
-                    this.cnCount[host]++
-                }
-
+                
                 return [host, this.listConnections[id][host]]
             } catch (e) {
                 throw e
